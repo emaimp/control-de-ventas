@@ -1,0 +1,18 @@
+[client]
+showSidebarNavigation = false
+
+[theme]
+# Primary color.
+primaryColor = "#040720"
+
+# Background color.
+backgroundColor = "#122A47"
+
+# Secondary background.
+secondaryBackgroundColor = "#040720"
+
+# Text color.
+textColor = "#FFFFFF"
+
+# Font family
+font = "monospace"
