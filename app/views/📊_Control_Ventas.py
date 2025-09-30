@@ -1,9 +1,8 @@
 import time
 import streamlit as st
 import plotly.express as px
-from connection.db import data_ventas
 from streamlit_extras.grid import grid
-from streamlit_extras.metric_cards import style_metric_cards
+from connection.db import data_ventas, data_costos, data_stock
 
 # Configuración de inicio
 st.set_page_config(
@@ -32,6 +31,10 @@ st.sidebar.markdown(
 with st.spinner("Cargando..."):
     time.sleep(1)
     dfDatos = data_ventas()
+
+if dfDatos.empty:
+    st.error("No hay datos de ventas con costos asociados. Asegúrese de que la tabla 'costos' esté poblada correctamente.")
+    st.stop()
 
 # Titulo de la pagina
 colt1, colt2, colt3 = st.columns([36, 34, 30])
@@ -169,8 +172,8 @@ ordenesAct = dfMesActual["Cantidad"].count()
 ordenesAnt = dfMesAnterior["Cantidad"].count()
 variacion_ord = ordenesAct - ordenesAnt
 # Valores Ganancias totales
-ventasAct = dfMesActual["Total"].sum()
-ventasAnt = dfMesAnterior["Total"].sum()
+ventasAct = dfMesActual["Ganancias"].sum()
+ventasAnt = dfMesAnterior["Ganancias"].sum()
 variacion_venta = ventasAct - ventasAnt
 
 st.write("") # Espacio
@@ -231,14 +234,14 @@ with col_v_meses:
     with st.container(border=True):
         dfVentasMes = (
             dfDatos.groupby("Mes")
-            .agg({"Total": "sum"})
+            .agg({"Ganancias": "sum"})
             .reset_index()
             )
         dfVentasMes['Mes_Nombre'] = dfVentasMes['Mes'].map(meses_dict)
         fig = px.line(
             dfVentasMes,
             x="Mes_Nombre",
-            y="Total",
+            y="Ganancias",
             title="Ganancias totales por cada Mes",
             hover_data={"Mes_Nombre": False, "Mes": False}
             )
@@ -246,7 +249,7 @@ with col_v_meses:
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             xaxis_title="MESES",
-            yaxis_title="TOTAL",
+            yaxis_title="GANANCIAS",
             )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -255,16 +258,16 @@ with col_v_ubicacion:
     with st.container(border=True):
         dfVentasUbicacionMes = (
             dfDatos.groupby(["Mes", "Ubicacion"])
-            .agg({"Total": "sum"})
+            .agg({"Ganancias": "sum"})
             .reset_index()
-            .sort_values(by=["Mes", "Total"], ascending=[True, False])
+            .sort_values(by=["Mes", "Ganancias"], ascending=[True, False])
             )
         dfVentasUbicacionMes["Ubicacion"] = dfVentasUbicacionMes["Ubicacion"].str.capitalize()
         dfVentasUbicacionMes['Mes_Nombre'] = dfVentasUbicacionMes['Mes'].map(meses_dict)
         fig = px.bar(
             dfVentasUbicacionMes,
             x="Mes_Nombre",
-            y="Total",
+            y="Ganancias",
             color="Ubicacion",
             title="Ganancias totales por Ubicación",
             text="Ubicacion",
@@ -277,7 +280,7 @@ with col_v_ubicacion:
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             xaxis_title="MESES",
-            yaxis_title="TOTAL",
+            yaxis_title="GANANCIAS",
             )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -291,7 +294,7 @@ with col_v_edad:
     with st.container(border=True):
         dfEdadProducto = (
             dfMesActual.groupby("Producto")
-            .agg({"Edad": "mean", "Total": "sum"})
+            .agg({"Edad": "mean", "Ganancias": "sum"})
             .reset_index()
         )
         dfEdadProducto["Edad"] = dfEdadProducto["Edad"].round(1)
@@ -299,7 +302,7 @@ with col_v_edad:
         fig = px.bar(
             dfEdadProducto,
             x="Producto",
-            y="Total",
+            y="Ganancias",
             title=f"Ganancias totales por edad promedio en el mes de {meses_dict.get(parMes, 'Desconocido')}",
             text="Edad_Texto",
             hover_data={"Producto": False, "Edad": False, "Edad_Texto": False}
@@ -308,7 +311,7 @@ with col_v_edad:
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             xaxis_title="PRODUCTOS",
-            yaxis_title="TOTAL",
+            yaxis_title="GANANCIAS",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -317,14 +320,14 @@ with col_v_genero:
     with st.container(border=True):
         dfVentasGenero = (
             dfMesActual.groupby(["Producto", "Genero"])
-            .agg({"Total": "sum", "Cantidad": "sum"})
+            .agg({"Ganancias": "sum", "Cantidad": "sum"})
             .reset_index()
         )
         dfVentasGenero["Genero"] = dfVentasGenero["Genero"].str.capitalize()
         fig = px.bar(
             dfVentasGenero,
             x="Producto",
-            y="Total",
+            y="Ganancias",
             color="Genero",
             title=f"Ganancia totales por género en el mes de {meses_dict.get(parMes, 'Desconocido')}",
             text="Genero",
@@ -337,7 +340,7 @@ with col_v_genero:
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             xaxis_title="PRODUCTOS",
-            yaxis_title="TOTAL",
+            yaxis_title="GANANCIAS",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -347,7 +350,7 @@ with col_v_genero:
 with st.container(border=True):
     dfVentasProducto = (
         dfDatos.groupby(["Mes", "Producto"])
-        .agg({"Total": "sum", "Cantidad": "sum"})
+        .agg({"Ganancias": "sum", "Cantidad": "sum"})
         .reset_index()
         .sort_values(by=["Mes", "Producto"])
     )
@@ -355,7 +358,7 @@ with st.container(border=True):
     fig = px.bar(
         dfVentasProducto,
         x="Mes_Nombre",
-        y="Total",
+        y="Ganancias",
         color="Producto",
         title="Ganancias y cantidad de productos vendidos totales",
         text="Cantidad",
@@ -366,7 +369,7 @@ with st.container(border=True):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis_title="MESES",
-        yaxis_title="TOTAL",
+        yaxis_title="GANANCIAS",
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -377,20 +380,43 @@ with st.container(border=True):
     col_topmax, col_topmin = st.columns(2)
     dfProductosVentas = (
         dfMesActual.groupby(["Producto", "Ubicacion"])
-        .agg({"Total": "sum", "Cantidad": "sum"})
+        .agg({"Ganancias": "sum", "Cantidad": "sum"})
         .reset_index()
     )
     with col_topmax:
         st.subheader("Productos más vendidos")
         st.table(
             dfProductosVentas.sort_values(by="Cantidad", ascending=False).head(10)[
-                ["Producto", "Ubicacion", "Total", "Cantidad"]
+                ["Producto", "Ubicacion", "Ganancias", "Cantidad"]
             ]
         )
     with col_topmin:
         st.subheader("Productos menos vendidos")
         st.table(
             dfProductosVentas.sort_values(by="Cantidad", ascending=True).head(10)[
-                ["Producto", "Ubicacion", "Total", "Cantidad"]
+                ["Producto", "Ubicacion", "Ganancias", "Cantidad"]
             ]
         )
+
+#
+# Tabla de precios y ganancias por producto
+#
+with st.container(border=True):
+    st.subheader("Precios y Ganancias por Producto")
+    dfCostos = data_costos()
+    dfStock = data_stock()[["Nombre", "Precio_Venta"]]
+    dfCostos = dfCostos.merge(dfStock, on="Nombre", how="left")
+    dfCostos["Ganancia"] = (
+        dfCostos["Precio_Venta"]
+        - dfCostos["Precio_Compra"]
+        - (dfCostos["Precio_Venta"] * dfCostos["Impuesto"] / 100)
+    )
+    dfCostos_renamed = dfCostos.rename(
+        columns={
+            "Precio_Compra": "Precio Compra",
+            "Precio_Venta": "Precio Venta"
+        }
+    )
+    st.table(
+        dfCostos_renamed[["Nombre", "Categoria", "Precio Compra", "Precio Venta", "Ganancia"]]
+    )

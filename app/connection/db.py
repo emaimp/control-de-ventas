@@ -31,12 +31,17 @@ def initialize_database():
                 sql_productos = f.read()
             with open("app/database/ventas.sql", "r") as f:
                 sql_ventas = f.read()
+            with open("app/database/costos.sql", "r") as f:
+                sql_costos = f.read()
 
             # Ejecutar creación de tablas
             for sql in sql_productos.split(";"):
                 if sql.strip():
                     conn.execute(text(sql))
             for sql in sql_ventas.split(";"):
+                if sql.strip():
+                    conn.execute(text(sql))
+            for sql in sql_costos.split(";"):
                 if sql.strip():
                     conn.execute(text(sql))
 
@@ -62,7 +67,27 @@ def get_connection():
 
 # Data Frame de productos
 def data_stock():
-    query = "SELECT * FROM productos"
+    query = """SELECT
+        id AS ID,
+        nombre AS Nombre,
+        categoria AS Categoria,
+        precio_venta AS Precio_Venta,
+        stock AS Stock
+    FROM productos"""
+    engine = get_connection()
+    df = pd.read_sql(query, engine)
+    return df
+
+# Data Frame de costos
+def data_costos():
+    query = """SELECT
+        c.id AS ID,
+        p.nombre AS Nombre,
+        p.categoria AS Categoria,
+        c.precio_compra AS Precio_Compra,
+        c.impuesto AS Impuesto
+    FROM costos c
+    JOIN productos p ON c.producto_id = p.id"""
     engine = get_connection()
     df = pd.read_sql(query, engine)
     return df
@@ -71,32 +96,32 @@ def data_stock():
 def data_ventas():
     query = """SELECT
         p.nombre AS Producto,
-        cantidad AS Cantidad,
-        precio_total AS Total,
-        edad_cliente AS Edad,
-        genero_cliente AS Genero,
-        ubicacion AS Ubicacion,
-        dia AS Dia,
-        mes AS Mes,
-        anio AS Anio,
-        fecha AS Fecha
+        v.cantidad AS Cantidad,
+        (p.precio_venta - c.precio_compra - p.precio_venta * (c.impuesto / 100)) * v.cantidad AS Ganancias,
+        v.edad_cliente AS Edad,
+        v.genero_cliente AS Genero,
+        v.ubicacion AS Ubicacion,
+        v.dia AS Dia,
+        v.mes AS Mes,
+        v.anio AS Anio,
+        v.fecha AS Fecha
     FROM ventas v
-    JOIN productos p ON v.producto_id = p.id"""
+    JOIN productos p ON v.producto_id = p.id
+    JOIN costos c ON c.producto_id = p.id"""
     engine = get_connection()
     df = pd.read_sql(query, engine)
     return df
 
-# Data Frame de predicciones (con regressors adicionales)
+# Data Frame de predicciones
 def cargar_datos():
     query = """SELECT
-        fecha,
-        SUM(precio_total) AS Total,
-        AVG(edad_cliente) AS Edad_Promedio,
-        COUNT(CASE WHEN genero_cliente = 'femenino' THEN 1 END) / COUNT(*) AS Proporcion_Femenino,
-        COUNT(CASE WHEN ubicacion = 'local 1' THEN 1 END) / COUNT(*) AS Proporcion_Local1
-    FROM ventas
-    GROUP BY fecha
-    ORDER BY fecha"""
+        v.fecha,
+        SUM( (p.precio_venta - c.precio_compra - p.precio_venta * (c.impuesto / 100)) * v.cantidad ) AS Ganancias
+    FROM ventas v
+    JOIN productos p ON v.producto_id = p.id
+    JOIN costos c ON c.producto_id = p.id
+    GROUP BY v.fecha
+    ORDER BY v.fecha"""
     engine = get_connection()
     df = pd.read_sql(query, engine)
     df["fecha"] = pd.to_datetime(df["fecha"])

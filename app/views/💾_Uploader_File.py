@@ -39,12 +39,22 @@ with colt2:
 # Funciones para validar y sanitizar datos
 #
 def validar_productos(df):
-    required_cols = ['nombre', 'categoria', 'precio', 'stock']
+    required_cols = ['nombre', 'categoria', 'precio_venta', 'stock']
     if not all(col in df.columns for col in required_cols):
         return False, f"Faltan columnas requeridas: {required_cols}"
     # Sanitizar tipos
-    df['precio'] = df['precio'].astype(int)
+    df['precio_venta'] = df['precio_venta'].astype(int)
     df['stock'] = df['stock'].astype(int)
+    return True, df
+
+def validar_costos(df):
+    required_cols = ['producto_id', 'precio_compra', 'impuesto']
+    if not all(col in df.columns for col in required_cols):
+        return False, f"Faltan columnas requeridas: {required_cols}"
+    # Sanitizar tipos
+    df['producto_id'] = df['producto_id'].astype(int)
+    df['precio_compra'] = df['precio_compra'].astype(float)
+    df['impuesto'] = df['impuesto'].astype(float)
     return True, df
 
 def validar_ventas(df):
@@ -63,12 +73,34 @@ def insertar_productos(engine, df):
         for _, row in df.iterrows():
             try:
                 conn.execute(
-                    text("INSERT INTO productos (nombre, categoria, precio, stock) VALUES (:nombre, :categoria, :precio, :stock)"),
+                    text("INSERT INTO productos (nombre, categoria, precio_venta, stock) VALUES (:nombre, :categoria, :precio_venta, :stock)"),
                     {
                         'nombre': row['nombre'],
                         'categoria': row['categoria'],
-                        'precio': row['precio'],
+                        'precio_venta': row['precio_venta'],
                         'stock': row['stock']
+                    }
+                )
+                inserted += 1
+            except Exception as e:
+                errors.append(f"Error en fila {_}: {str(e)}")
+    return inserted, errors
+
+#
+# Función para insertar costos
+#
+def insertar_costos(engine, df):
+    inserted = 0
+    errors = []
+    with engine.begin() as conn:
+        for _, row in df.iterrows():
+            try:
+                conn.execute(
+                    text("INSERT INTO costos (producto_id, precio_compra, impuesto) VALUES (:producto_id, :precio_compra, :impuesto)"),
+                    {
+                        'producto_id': row['producto_id'],
+                        'precio_compra': row['precio_compra'],
+                        'impuesto': row['impuesto']
                     }
                 )
                 inserted += 1
@@ -110,9 +142,10 @@ def insertar_ventas(engine, df):
 #
 destino = st.radio(
     "Selecciona los datos a cargar:",
-    options=["productos", "ventas"],
+    options=["productos", "costos", "ventas"],
     captions=[
-        "Columnas requeridas: nombre, categoria, precio, stock",
+        "Columnas requeridas: nombre, categoria, precio_venta, stock",
+        "Columnas requeridas: producto_id, precio_compra, impuesto",
         "Columnas requeridas: producto_id, cantidad, precio_total, edad_cliente, genero_cliente, ubicacion, dia, mes, anio, fecha"
         ]
 )
@@ -140,12 +173,17 @@ if uploaded_files:
         st.dataframe(df)
 
         # Botón para confirmar carga por archivo
-        if st.button(f"Cargar datos de {uploaded_file.name} en tabla '{destino}'", key=f"upload_{i}"):
+        if st.button(f"Cargar datos {uploaded_file.name}"):
             # Verificar y validar
             if destino == "productos":
                 valido, resultado = validar_productos(df)
-            else:
+            elif destino == "costos":
+                valido, resultado = validar_costos(df)
+            elif destino == "ventas":
                 valido, resultado = validar_ventas(df)
+            else:
+                st.error("Selección de tabla no válida.")
+                valido = False
 
             if not valido:
                 st.error(resultado)
@@ -155,7 +193,9 @@ if uploaded_files:
                 engine = get_connection()
                 if destino == "productos":
                     inserted, errors = insertar_productos(engine, df)
-                else:
+                elif destino == "costos":
+                    inserted, errors = insertar_costos(engine, df)
+                elif destino == "ventas":
                     inserted, errors = insertar_ventas(engine, df)
 
                 if inserted > 0:
