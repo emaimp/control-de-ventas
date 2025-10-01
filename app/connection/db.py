@@ -112,14 +112,27 @@ def data_ventas():
     df = pd.read_sql(query, engine)
     return df
 
-# Data Frame de predicciones
-def cargar_datos():
+# Data Frame para la predicción de ganancias
+def cargar_datos_ganancias():
     query = """SELECT
         v.fecha,
         SUM( (p.precio_venta - c.precio_compra - p.precio_venta * (c.impuesto / 100)) * v.cantidad ) AS Ganancias
     FROM ventas v
     JOIN productos p ON v.producto_id = p.id
     JOIN costos c ON c.producto_id = p.id
+    GROUP BY v.fecha
+    ORDER BY v.fecha"""
+    engine = get_connection()
+    df = pd.read_sql(query, engine)
+    df["fecha"] = pd.to_datetime(df["fecha"])
+    return df
+
+# Data Frame para la predicción de cantidad
+def cargar_datos_cantidad():
+    query = """SELECT
+        v.fecha,
+        SUM(v.cantidad) AS Cantidad
+    FROM ventas v
     GROUP BY v.fecha
     ORDER BY v.fecha"""
     engine = get_connection()

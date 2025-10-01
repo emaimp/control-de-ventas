@@ -417,6 +417,8 @@ with st.container(border=True):
             "Precio_Venta": "Precio Venta"
         }
     )
-    st.table(
-        dfCostos_renamed[["Nombre", "Categoria", "Precio Compra", "Precio Venta", "Ganancia"]]
+    st.dataframe(
+        dfCostos_renamed[["Nombre", "Categoria", "Precio Compra", "Precio Venta", "Ganancia"]],
+        height=400,
+        use_container_width=True
     )

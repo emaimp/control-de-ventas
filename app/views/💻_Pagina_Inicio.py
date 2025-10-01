@@ -23,17 +23,22 @@ st.sidebar.markdown(
     """
 )
 
-# Columna banner
-col_banner1, col_banner2, col_banner3 = st.columns(3)
+# Banner
+col_banner1, col_banner2, col_banner3 = st.columns([33, 37, 30])
 with col_banner2:
     st.write("") # Espacio
-    st.write("") # Espacio
     st.image("app/assets/banner.png", width=480)
+
+# Título de la empresa
+col_title1, col_title2, col_title3 = st.columns([34, 36, 30])
+with col_title2:
+    st.header("Electrodomésticos S.A")
+    st.write("") # Espacio
     st.write("") # Espacio
     st.write("") # Espacio
 
 # Columna del texto
-col_inf1, col_inf2, col_inf3 = st.columns([30, 40, 30])
+col_inf1, col_inf2, col_inf3 = st.columns([20, 60, 20])
 with col_inf2:
     st.markdown(
         """

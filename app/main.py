@@ -31,11 +31,16 @@ def login():
     # Menu
     col_menu1, col_menu2, col_menu3 = st.columns(3)
     with col_menu2:
-        # Logo
-        col_left, col_center, col_right = st.columns([18, 33, 49])
+        # Banner
+        col_left, col_center, col_right = st.columns([15, 35, 50])
         with col_center:
             st.image("app/assets/banner.png", width=373)
-        st.write("") # Espacio
+        
+        # Título de la empresa
+        col_title1, col_title2, col_title3 = st.columns([11, 82, 7])
+        with col_title2:
+            st.markdown('<h4 style="text-align:center; font-size: 2em;">Electrodomésticos S.A</h4>', unsafe_allow_html=True)
+            st.write("") # Espacio
         
         # Formulario para manejar el botón enviar
         with st.form(key="login_form"):
