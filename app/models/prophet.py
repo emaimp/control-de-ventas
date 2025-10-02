@@ -47,10 +47,10 @@ def generar_forecast_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_
         yearly_seasonality=True,
         seasonality_mode='additive',
         holidays=holidays_df,
-        holidays_prior_scale=10,
+        holidays_prior_scale=5,
         interval_width=0.9,
-        n_changepoints=100,
-        changepoint_prior_scale=1,
+        n_changepoints=50,
+        changepoint_prior_scale=0.5,
         )
     # Entrenar el modelo con los datos de entrenamiento
     m.fit(df_train_prophet)
@@ -78,24 +78,33 @@ def generar_forecast_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_
         yearly_seasonality=True,
         seasonality_mode='additive',
         holidays=holidays_df,
-        holidays_prior_scale=10,
+        holidays_prior_scale=5,
         interval_width=0.9,
-        n_changepoints=100,
-        changepoint_prior_scale=1,
+        n_changepoints=50,
+        changepoint_prior_scale=0.5,
         )
     # Ajustar el modelo con todos los datos limpios disponibles
     m2.fit(df_limpio_prophet)
 
-    # Determinar la frecuencia temporal seleccionada por el usuario
-    frequencia = frequenciasCodigo[frequencias.index(parFrecuencia)]
+    # Calcular periods para predicciones diarias y agrupar después
+    periods = parPeriodosFuturos * (365 if parFrecuencia == "Año" else 30 if parFrecuencia == "Mes" else 1)
+    frequencia = 'D'
     # Crear dataframe futuro con el período de predicción especificado
-    future = m2.make_future_dataframe(periods=parPeriodosFuturos, freq=frequencia)
+    future = m2.make_future_dataframe(periods=periods, freq=frequencia)
     # Generar las predicciones del modelo para el período futuro
     forecast = m2.predict(future)
-    # Extraer solo las predicciones para los períodos futuros solicitados
-    dfPrediccion = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(
-        parPeriodosFuturos
-        )
+    # Extraer todas las predicciones diarias
+    dfPrediccion = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]]
+
+    # Agrupar por mes o año según frecuencia seleccionada
+    if parFrecuencia == "Mes":
+        dfPrediccion = dfPrediccion.resample('M', on='ds').agg({'yhat': 'sum', 'yhat_lower': 'sum', 'yhat_upper': 'sum'}).reset_index()
+    elif parFrecuencia == "Año":
+        dfPrediccion = dfPrediccion.resample('Y', on='ds').agg({'yhat': 'sum', 'yhat_lower': 'sum', 'yhat_upper': 'sum'}).reset_index()
+    # Para "Dia" se queda como está, no se usa
+
+    # Obtener las últimas parPeriodosFuturos períodos
+    dfPrediccion = dfPrediccion.tail(parPeriodosFuturos)
 
     # Generar gráfico completo de Prophet con datos históricos y predicciones
     fig1 = m2.plot(forecast)
@@ -118,9 +127,9 @@ def generar_forecast_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_
     return dfResultado_display, fig1, mape, rmse, cobertura
 
 #
-# Predicción de cantidad
+# Predicción de ventas
 #
-def generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo):
+def generar_forecast_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo):
     # Verificar si hay datos válidos para realizar la predicción
     if df_limpio is None or df_limpio.empty:
         raise ValueError("No hay datos disponibles para predicción.")
@@ -153,7 +162,7 @@ def generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_t
     holidays_df = pd.DataFrame(holidays_list)
 
     # Crear copias temporales con nombres compatibles con Prophet para entrenamiento
-    df_train_prophet = df_train.rename(columns={"Fecha": "ds", "Cantidad": "y"})
+    df_train_prophet = df_train.rename(columns={"Fecha": "ds", "Ventas": "y"})
 
     # Crear y configurar el modelo Prophet con estacionalidad ajustada y holidays
     m = Prophet(
@@ -162,10 +171,10 @@ def generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_t
         yearly_seasonality=True,
         seasonality_mode='additive',
         holidays=holidays_df,
-        holidays_prior_scale=10,
+        holidays_prior_scale=5,
         interval_width=0.9,
-        n_changepoints=100,
-        changepoint_prior_scale=1,
+        n_changepoints=50,
+        changepoint_prior_scale=0.5,
         )
     # Entrenar el modelo con los datos de entrenamiento
     m.fit(df_train_prophet)
@@ -184,7 +193,7 @@ def generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_t
         mape, rmse, cobertura = None, None, None
 
     # Crear copia temporal para el modelo completo con nombres compatibles con Prophet
-    df_limpio_prophet = df_limpio.rename(columns={"Fecha": "ds", "Cantidad": "y"})
+    df_limpio_prophet = df_limpio.rename(columns={"Fecha": "ds", "Ventas": "y"})
 
     # Crear un nuevo modelo idéntico para predicciones futuras (no se permite ajustar dos veces sobre el mismo objeto)
     m2 = Prophet(
@@ -193,24 +202,33 @@ def generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_t
         yearly_seasonality=True,
         seasonality_mode='additive',
         holidays=holidays_df,
-        holidays_prior_scale=10,
+        holidays_prior_scale=5,
         interval_width=0.9,
-        n_changepoints=100,
-        changepoint_prior_scale=1,
+        n_changepoints=50,
+        changepoint_prior_scale=0.5,
         )
     # Ajustar el modelo con todos los datos limpios disponibles
     m2.fit(df_limpio_prophet)
 
-    # Determinar la frecuencia temporal seleccionada por el usuario
-    frequencia = frequenciasCodigo[frequencias.index(parFrecuencia)]
+    # Calcular periods para predicciones diarias y agrupar después
+    periods = parPeriodosFuturos * (365 if parFrecuencia == "Año" else 30 if parFrecuencia == "Mes" else 1)
+    frequencia = 'D'
     # Crear dataframe futuro con el período de predicción especificado
-    future = m2.make_future_dataframe(periods=parPeriodosFuturos, freq=frequencia)
+    future = m2.make_future_dataframe(periods=periods, freq=frequencia)
     # Generar las predicciones del modelo para el período futuro
     forecast = m2.predict(future)
-    # Extraer solo las predicciones para los períodos futuros solicitados
-    dfPrediccion = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(
-        parPeriodosFuturos
-        )
+    # Extraer todas las predicciones diarias
+    dfPrediccion = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]]
+
+    # Agrupar por mes o año según frecuencia seleccionada
+    if parFrecuencia == "Mes":
+        dfPrediccion = dfPrediccion.resample('M', on='ds').agg({'yhat': 'sum', 'yhat_lower': 'sum', 'yhat_upper': 'sum'}).reset_index()
+    elif parFrecuencia == "Año":
+        dfPrediccion = dfPrediccion.resample('Y', on='ds').agg({'yhat': 'sum', 'yhat_lower': 'sum', 'yhat_upper': 'sum'}).reset_index()
+    # Para "Dia" se queda como está, no se usa
+
+    # Obtener las últimas parPeriodosFuturos períodos
+    dfPrediccion = dfPrediccion.tail(parPeriodosFuturos)
 
     # Generar gráfico completo de Prophet con datos históricos y predicciones
     fig1 = m2.plot(forecast)
@@ -222,12 +240,12 @@ def generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_t
     fig1.gca().spines["right"].set_color("none")
     # Cambiar nombres de ejes para mejor interpretabilidad
     fig1.gca().set_xlabel("Fecha")
-    fig1.gca().set_ylabel("Cantidad")
+    fig1.gca().set_ylabel("Ventas")
 
     # Preparar datos para visualización diferenciando reales vs predicciones
     dfResultado = dfPrediccion[["ds", "yhat"]].rename(columns={"yhat": "y"})
     # Renombrar para mejorar interpretabilidad en la visualización
-    dfResultado_display = dfResultado.rename(columns={"ds": "Fecha", "y": "Cantidad"})
+    dfResultado_display = dfResultado.rename(columns={"ds": "Fecha", "y": "Ventas"})
 
     # Retornar solo los elementos necesarios para la UI
     return dfResultado_display, fig1, mape, rmse, cobertura

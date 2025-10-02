@@ -127,11 +127,11 @@ def cargar_datos_ganancias():
     df["fecha"] = pd.to_datetime(df["fecha"])
     return df
 
-# Data Frame para la predicción de cantidad
-def cargar_datos_cantidad():
+# Data Frame para la predicción de ventas
+def cargar_datos_ventas():
     query = """SELECT
         v.fecha,
-        SUM(v.cantidad) AS Cantidad
+        SUM(v.cantidad) AS Ventas
     FROM ventas v
     GROUP BY v.fecha
     ORDER BY v.fecha"""

@@ -1,8 +1,9 @@
 import time
 import streamlit as st
 import plotly.express as px
-from connection.db import cargar_datos_ganancias, cargar_datos_cantidad
-from models.prophet import generar_forecast_ganancias, generar_forecast_cantidad
+import matplotlib.pyplot as plt
+from connection.db import cargar_datos_ganancias, cargar_datos_ventas
+from models.prophet import generar_forecast_ganancias, generar_forecast_ventas
 
 # Configuración de inicio
 st.set_page_config(
@@ -31,7 +32,7 @@ st.sidebar.markdown(
 with st.spinner("Cargando..."):
     time.sleep(1)
     df_ganancias = cargar_datos_ganancias()
-    df_cantidad = cargar_datos_cantidad()
+    df_ventas = cargar_datos_ventas()
 
 # Titulo de la pagina
 colt1, colt2, colt3 = st.columns([32, 38, 30])
@@ -66,16 +67,30 @@ def prediccion_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_train,
             st.dataframe(dfResultado_display)
 
         with c2:
-            fig = px.line(dfResultado_display, x="Fecha", y="Ganancias")
+            fig = px.area(dfResultado_display, x="Fecha", y="Ganancias", line_shape="spline", markers=True,
+                          color_discrete_sequence=["#00AAB5"])
             fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                title=f"🚀 {parPeriodosFuturos} {'Meses' if parFrecuencia == 'Mes' else 'Años'}",
+                xaxis_title="Fecha",
+                yaxis_title="Ganancias (ARS)"
             )
+            fig.update_xaxes(type='date')
             st.plotly_chart(fig, use_container_width=True)
 
     # Pestaña del gráfico: mostrar el gráfico completo de Prophet centrado
     with tab_2:
         col_plot1, col_plot2, col_plot3 = st.columns([17, 60, 23])
         with col_plot2:
+            fig1.gca().set_facecolor('#f4f4f4')
+            fig1.gca().tick_params(axis='both', labelcolor='white')
+            fig1.gca().xaxis.label.set_color('white')
+            fig1.gca().yaxis.label.set_color('white')
+            fig1.gca().spines['top'].set_color('white')
+            fig1.gca().spines['bottom'].set_color('white')
+            fig1.gca().spines['left'].set_color('white')
+            fig1.gca().spines['right'].set_color('white')
+            fig1.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x/1e6:.1f}M'))
             st.write(fig1)
 
     # Pestaña de precisión: mostrar métricas de evaluación del modelo
@@ -104,13 +119,13 @@ def prediccion_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_train,
             st.error("No se pudo calcular precisión (insuficientes datos o error).")
 
 #
-# Visualización de la predicción "cantidad"
+# Visualización de la predicción "ventas"
 #
-def prediccion_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo):
+def prediccion_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo):
 
     # Generar el forecast usando Prophet
     try:
-        dfResultado_display, fig1, mape, rmse, cobertura = generar_forecast_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo)
+        dfResultado_display, fig1, mape, rmse, cobertura = generar_forecast_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo)
     except ValueError as e:
         st.error(str(e))
         return
@@ -129,16 +144,29 @@ def prediccion_cantidad(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, 
             st.dataframe(dfResultado_display)
 
         with cq2:
-            fig = px.line(dfResultado_display, x="Fecha", y="Cantidad")
+            fig = px.area(dfResultado_display, x="Fecha", y="Ventas", line_shape="spline", markers=True,
+                          color_discrete_sequence=["#AA00FF"])
             fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                title=f"🚀 {parPeriodosFuturos} {'Meses' if parFrecuencia == 'Mes' else 'Años'}",
+                xaxis_title="Fecha",
+                yaxis_title="Ventas (Unidades)"
             )
+            fig.update_xaxes(type='date')
             st.plotly_chart(fig, use_container_width=True)
 
     # Pestaña del gráfico: mostrar el gráfico completo de Prophet centrado
     with tab_q2:
         col_qplot1, col_qplot2, col_qplot3 = st.columns([17, 60, 23])
         with col_qplot2:
+            fig1.gca().set_facecolor('#f4f4f4')
+            fig1.gca().tick_params(axis='both', labelcolor='white')
+            fig1.gca().xaxis.label.set_color('white')
+            fig1.gca().yaxis.label.set_color('white')
+            fig1.gca().spines['top'].set_color('white')
+            fig1.gca().spines['bottom'].set_color('white')
+            fig1.gca().spines['left'].set_color('white')
+            fig1.gca().spines['right'].set_color('white')
             st.write(fig1)
 
     # Pestaña de precisión: mostrar métricas de evaluación del modelo
@@ -203,38 +231,38 @@ else:
     st.error("No se cargaron datos.")
 
 #
-# Verificación y limpieza de los datos "cantidad"
+# Verificación y limpieza de los datos "ventas"
 #
-if df_cantidad is not None and not df_cantidad.empty:
+if df_ventas is not None and not df_ventas.empty:
     # Fase de limpieza de datos: eliminar filas con valores faltantes críticos
-    df_cantidad = df_cantidad.dropna(subset=["fecha", "Cantidad"])
-    if df_cantidad.empty:
-        st.error("No quedan datos de cantidad después de limpieza.")
+    df_ventas = df_ventas.dropna(subset=["fecha", "Ventas"])
+    if df_ventas.empty:
+        st.error("No quedan datos de ventas después de limpieza.")
         st.stop()
     else:
         # Eliminar valores atípicos extremos
-        upper_limit_c = df_cantidad["Cantidad"].quantile(0.99)
-        df_cantidad = df_cantidad[df_cantidad["Cantidad"] <= upper_limit_c]
-        if df_cantidad.empty:
-            st.error("No quedan datos de cantidad después de remover outliers.")
+        upper_limit_c = df_ventas["Ventas"].quantile(0.99)
+        df_ventas = df_ventas[df_ventas["Ventas"] <= upper_limit_c]
+        if df_ventas.empty:
+            st.error("No quedan datos de ventas después de remover outliers.")
             st.stop()
         else:
             # Renombrar columnas para Prophet
-            df_cantidad = df_cantidad.rename(columns={"fecha": "Fecha"})
+            df_ventas = df_ventas.rename(columns={"fecha": "Fecha"})
 
-            # Dividir en train/test para cantidad
-            if len(df_cantidad) > 30:
-                train_size_c = int(len(df_cantidad) * 0.8)
-                df_train_c = df_cantidad.iloc[:train_size_c]
-                df_test_c = df_cantidad.iloc[train_size_c:]
+            # Dividir en train/test para ventas
+            if len(df_ventas) > 30:
+                train_size_c = int(len(df_ventas) * 0.8)
+                df_train_ventas = df_ventas.iloc[:train_size_c]
+                df_test_ventas = df_ventas.iloc[train_size_c:]
             else:
-                df_train_c = df_cantidad
-                df_test_c = df_cantidad.copy()
-                st.warning("Pocos datos de cantidad para evaluación precisa (usa al menos 30 días)")
+                df_train_ventas = df_ventas
+                df_test_ventas = df_ventas.copy()
+                st.warning("Pocos datos de ventas para evaluación precisa (usa al menos 30 días)")
 
 else:
     # Manejar caso donde no hay datos disponibles para procesar
-    st.error("No se cargaron datos de cantidad.")
+    st.error("No se cargaron datos de ventas.")
     st.stop()
 
 # Definir las frecuencias de control
@@ -279,6 +307,6 @@ if btnEjecutarForecast:
     st.header("Predicción de Ganancias")
     prediccion_ganancias(df_ganancias, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo)
 
-    # Predicción de cantidad
-    st.header("Predicción de Cantidad")
-    prediccion_cantidad(df_cantidad, parFrecuencia, parPeriodosFuturos, df_train_c, frequencias, frequenciasCodigo)
+    # Predicción de ventas
+    st.header("Predicción de Ventas")
+    prediccion_ventas(df_ventas, parFrecuencia, parPeriodosFuturos, df_train_ventas, frequencias, frequenciasCodigo)
