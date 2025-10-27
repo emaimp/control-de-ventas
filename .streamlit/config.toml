@@ -6,7 +6,7 @@ showSidebarNavigation = false
 primaryColor = "#000000"
 
 # Background color.
-backgroundColor = "#122A47"
+backgroundColor = "#000000"
 
 # Secondary background.
 secondaryBackgroundColor = "#000000"

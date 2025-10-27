@@ -11,18 +11,6 @@ with open("app/config/styles.css") as f:
     css = f.read()
 st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# Badges
-st.sidebar.markdown(
-    """
-    [![Facebook](
-        https://img.shields.io/badge/-Facebook-blue?style=for-the-badge&logo=facebook
-        )](https://www.facebook.com/)
-    [![WhatsApp](
-        https://img.shields.io/badge/-WhatsApp-darkgreen?style=for-the-badge&logo=whatsapp
-        )](https://web.whatsapp.com/)
-    """
-)
-
 # Banner
 col_banner1, col_banner2, col_banner3 = st.columns([33, 37, 30])
 with col_banner2:

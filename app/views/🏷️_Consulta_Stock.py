@@ -14,18 +14,6 @@ with open("app/config/styles.css") as f:
     css = f.read()
 st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# Badges
-st.sidebar.markdown(
-    """
-    [![Facebook](
-        https://img.shields.io/badge/-Facebook-blue?style=for-the-badge&logo=facebook
-        )](https://www.facebook.com/)
-    [![WhatsApp](
-        https://img.shields.io/badge/-WhatsApp-darkgreen?style=for-the-badge&logo=whatsapp
-        )](https://web.whatsapp.com/)
-    """
-)
-
 # Titulo de la pagina
 colt1, colt2, colt3 = st.columns([36, 34, 30])
 with colt2:

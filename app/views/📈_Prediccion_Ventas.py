@@ -16,18 +16,6 @@ with open("app/config/styles.css") as f:
     css = f.read()
 st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# Badges
-st.sidebar.markdown(
-    """
-    [![Facebook](
-        https://img.shields.io/badge/-Facebook-blue?style=for-the-badge&logo=facebook
-        )](https://www.facebook.com/)
-    [![WhatsApp](
-        https://img.shields.io/badge/-WhatsApp-darkgreen?style=for-the-badge&logo=whatsapp
-        )](https://web.whatsapp.com/)
-    """
-)
-
 # Toast para cargar los datos
 with st.spinner("Cargando..."):
     time.sleep(1)
@@ -228,7 +216,7 @@ if df_ganancias is not None and not df_ganancias.empty:
 
 else:
     # Manejar caso donde no hay datos disponibles para procesar
-    st.error("No se cargaron datos.")
+    st.error("No se cargaron datos de ganancias.")
 
 #
 # Verificación y limpieza de los datos "ventas"

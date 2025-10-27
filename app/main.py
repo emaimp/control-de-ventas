@@ -31,10 +31,16 @@ def login():
     # Menu
     col_menu1, col_menu2, col_menu3 = st.columns(3)
     with col_menu2:
-        # Banner
-        col_left, col_center, col_right = st.columns([15, 35, 50])
-        with col_center:
-            st.image("app/assets/banner.png", width=373)
+        
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("") # Espacio
+        st.write("")
+        st.write("")
+        st.write("")
+        st.write("")
         
         # Título de la empresa
         col_title1, col_title2, col_title3 = st.columns([11, 82, 7])
@@ -82,49 +88,29 @@ role = st.session_state.role
 #
 # Paginas
 #
-logout_page = st.Page(
-    logout,
-    title="Salir",
-    icon=":material/logout:",
-)
-productos_1 = st.Page(
-    page="views/💾_Uploader_File.py",
-    title="Carga de Datos",
-)
+pages = {
+    "Home": [
+        st.Page("views/💻_Pagina_Inicio.py", title="Inicio", default=(role == "Admin")),
+        st.Page(logout, title="Cerrar Sesión", icon=":material/logout:"),
+    ],
+    "Productos": [
+        st.Page("views/💾_Uploader_File.py", title="Carga de Datos"),
+        st.Page("views/🏷️_Consulta_Stock.py", title="Consulta de Stock"),
+    ],
+    "Ventas": [
+        st.Page("views/📊_Control_Ventas.py", title="Control de Ventas"),
+        st.Page("views/📈_Prediccion_Ventas.py", title="Predicción de Ventas"),
+    ],
 
-productos_2 = st.Page(
-    page="views/🏷️_Consulta_Stock.py",
-    title="Consulta de Stock",
-)
-
-ventas_1 = st.Page(
-    page="views/📊_Control_Ventas.py",
-    title="Control de Ventas",
-)
-ventas_2 = st.Page(
-    page="views/📈_Prediccion_Ventas.py",
-    title="Predicción de Ventas",
-)
-
-admin = st.Page(
-    page="views/💻_Pagina_Inicio.py",
-    title="Home",
-    default=(role == "Admin"),
-)
-
-# Agrupan las páginas en secciones para facilitar la navegación
-account_pages = [logout_page]
-admin_pages = [admin]
-productos_pages = [productos_1, productos_2]
-ventas_pages = [ventas_1, ventas_2]
+}
 
 # Configura la navegación dinámicamente según el rol del usuario
 page_dict = {}
 # Condicionales para la navegación
 if st.session_state.role == "Admin":
-    page_dict["Admin"] = admin_pages + productos_pages + ventas_pages
+    page_dict["Admin"] = pages
 if len(page_dict) > 0:
-    pg = st.navigation({"Cuenta": account_pages} | page_dict)
+    pg = st.navigation(pages, position="top")
 else:
     pg = st.navigation([st.Page(login)])
 
