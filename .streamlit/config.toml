@@ -1,12 +1,9 @@
-[client]
-showSidebarNavigation = false
-
 [theme]
 # Primary color.
-primaryColor = "#000000"
+primaryColor = "#40b5c4"
 
 # Background color.
-backgroundColor = "#000000"
+backgroundColor = "#003153"
 
 # Secondary background.
 secondaryBackgroundColor = "#000000"

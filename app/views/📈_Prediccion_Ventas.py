@@ -9,12 +9,7 @@ from models.prophet import generar_forecast_ganancias, generar_forecast_ventas
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
-)
-
-# Cargar styles.css
-with open("app/config/styles.css") as f:
-    css = f.read()
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    )
 
 # Toast para cargar los datos
 with st.spinner("Cargando..."):
@@ -36,7 +31,13 @@ def prediccion_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_train,
 
     # Generar el forecast usando Prophet
     try:
-        dfResultado_display, fig1, mape, rmse, cobertura = generar_forecast_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo)
+        dfResultado_display, fig1, mape, rmse, cobertura = generar_forecast_ganancias(
+            df_limpio,
+            parFrecuencia,
+            parPeriodosFuturos,
+            df_train, frequencias,
+            frequenciasCodigo
+            )
     except ValueError as e:
         st.error(str(e))
         return
@@ -113,7 +114,13 @@ def prediccion_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, fr
 
     # Generar el forecast usando Prophet
     try:
-        dfResultado_display, fig1, mape, rmse, cobertura = generar_forecast_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, frequencias, frequenciasCodigo)
+        dfResultado_display, fig1, mape, rmse, cobertura = generar_forecast_ventas(
+            df_limpio,
+            parFrecuencia,
+            parPeriodosFuturos,
+            df_train, frequencias,
+            frequenciasCodigo
+            )
     except ValueError as e:
         st.error(str(e))
         return
@@ -287,7 +294,7 @@ with col_main3:
         col_be1, col_be2, col_be3 = st.columns([38, 30, 32])
         with col_be2:
             # Botón que inicia el proceso de predicción al ser presionado
-            btnEjecutarForecast = st.button("Ejecutar")
+            btnEjecutarForecast = st.button("Ejecutar", type="primary", width="stretch")
 
 # Verificar si el usuario ha presionado el botón para ejecutar la predicción
 if btnEjecutarForecast:

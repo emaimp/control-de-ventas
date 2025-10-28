@@ -7,12 +7,7 @@ from connection.db import data_stock, data_costos
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
-)
-
-# Cargar styles.css
-with open("app/config/styles.css") as f:
-    css = f.read()
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    )
 
 # Titulo de la pagina
 colt1, colt2, colt3 = st.columns([36, 34, 30])

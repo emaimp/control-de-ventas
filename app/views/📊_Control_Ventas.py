@@ -8,21 +8,12 @@ from connection.db import data_ventas, data_costos, data_stock
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
-)
-
-# Cargar styles.css
-with open("app/config/styles.css") as f:
-    css = f.read()
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    )
 
 # Toast para cargar los datos
 with st.spinner("Cargando..."):
     time.sleep(1)
     dfDatos = data_ventas()
-
-if dfDatos.empty:
-    st.error("No hay datos de ventas con costos asociados.")
-    st.stop()
 
 # Titulo de la pagina
 colt1, colt2, colt3 = st.columns([36, 34, 30])
@@ -31,6 +22,10 @@ with colt2:
     st.header("Control de Ventas 📊")
     st.write("") # Espacio
     st.write("") # Espacio
+
+if dfDatos.empty:
+    st.error("No hay datos de ventas con ganancias asociadas.")
+    st.stop()
 
 #
 # Columas para los filtros

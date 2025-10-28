@@ -7,12 +7,7 @@ from connection.db import get_connection
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
-)
-
-# Cargar styles.css
-with open("app/config/styles.css") as f:
-    css = f.read()
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    )
 
 # Titulo de la pagina
 colt1, colt2, colt3 = st.columns([36, 33, 31])
@@ -106,7 +101,10 @@ def insertar_ventas(engine, df):
         for _, row in df.iterrows():
             try:
                 conn.execute(
-                    text("INSERT INTO ventas (producto_id, cantidad, precio_total, edad_cliente, genero_cliente, ubicacion, dia, mes, anio, fecha) VALUES (:producto_id, :cantidad, :precio_total, :edad_cliente, :genero_cliente, :ubicacion, :dia, :mes, :anio, :fecha)"),
+                    text("""
+                        INSERT INTO ventas (producto_id, cantidad, precio_total, edad_cliente, genero_cliente, ubicacion, dia, mes, anio, fecha)
+                        VALUES (:producto_id, :cantidad, :precio_total, :edad_cliente, :genero_cliente, :ubicacion, :dia, :mes, :anio, :fecha)
+                    """),
                     {
                         'producto_id': row['producto_id'],
                         'cantidad': row['cantidad'],
@@ -136,7 +134,7 @@ destino = st.radio(
         "Columnas requeridas: producto_id, precio_compra, impuesto",
         "Columnas requeridas: producto_id, cantidad, precio_total, edad_cliente, genero_cliente, ubicacion, dia, mes, anio, fecha"
         ]
-)
+    )
 
 #
 # Zona de carga
@@ -145,7 +143,7 @@ uploaded_files = st.file_uploader(
     "Archivos compatibles (.xlsx .xls) o csv",
     accept_multiple_files=True,
     type=["xlsx", "xls", "csv"]
-)
+    )
 
 # Verificar si se han subido archivos
 if uploaded_files:
@@ -161,34 +159,36 @@ if uploaded_files:
         st.dataframe(df)
 
         # Botón para confirmar carga por archivo
-        if st.button(f"Cargar datos {uploaded_file.name}"):
-            # Verificar y validar
-            if destino == "productos":
-                valido, resultado = validar_productos(df)
-            elif destino == "costos":
-                valido, resultado = validar_costos(df)
-            elif destino == "ventas":
-                valido, resultado = validar_ventas(df)
-            else:
-                st.error("Selección de tabla no válida.")
-                valido = False
-
-            if not valido:
-                st.error(resultado)
-            else:
-                df = resultado
-                # Intentar conexión e inserción
-                engine = get_connection()
+        button_1, button_2, button_3 = st.columns(3)
+        with button_2:
+            if st.button(f"Cargar '{uploaded_file.name}'", type="primary", width="stretch"):
+                # Verificar y validar
                 if destino == "productos":
-                    inserted, errors = insertar_productos(engine, df)
+                    valido, resultado = validar_productos(df)
                 elif destino == "costos":
-                    inserted, errors = insertar_costos(engine, df)
+                    valido, resultado = validar_costos(df)
                 elif destino == "ventas":
-                    inserted, errors = insertar_ventas(engine, df)
+                    valido, resultado = validar_ventas(df)
+                else:
+                    st.error("Selección de tabla no válida.")
+                    valido = False
 
-                if inserted > 0:
-                    st.success(f"Se insertaron {inserted} filas correctamente en '{destino}'.")
-                if errors:
-                    st.warning("Errores en algunas inserciones:")
-                    for error in errors:
-                        st.write(error)
+                if not valido:
+                    st.error(resultado)
+                else:
+                    df = resultado
+                    # Intentar conexión e inserción
+                    engine = get_connection()
+                    if destino == "productos":
+                        inserted, errors = insertar_productos(engine, df)
+                    elif destino == "costos":
+                        inserted, errors = insertar_costos(engine, df)
+                    elif destino == "ventas":
+                        inserted, errors = insertar_ventas(engine, df)
+
+                    if inserted > 0:
+                        st.success(f"Todos los datos se cargaron correctamente.")
+                    if errors:
+                        st.warning("Errores en algunas inserciones:")
+                        for error in errors:
+                            st.write(error)
