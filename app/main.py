@@ -35,7 +35,7 @@ def login():
             logo_1, logo_2, logo_3 = st.columns([27, 60, 13])
             with logo_2:
                 st.write("") # Espacio
-                st.image("app/assets/banner.png", width=250)
+                st.image("app/assets/logo.png", width=250)
                 st.write("") # Espacio
                 st.write("") # Espacio
             

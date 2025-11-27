@@ -11,7 +11,7 @@ col_banner1, col_banner2, col_banner3 = st.columns([37, 33, 30])
 with col_banner2:
     st.write("") # Espacio
     st.write("") # Espacio
-    st.image("app/assets/banner.png", width=360)
+    st.image("app/assets/logo.png", width=360)
 
 # Título de la empresa
 col_title1, col_title2, col_title3 = st.columns([34, 36, 30])

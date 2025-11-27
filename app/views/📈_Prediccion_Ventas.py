@@ -67,7 +67,7 @@ def prediccion_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_train,
             fig.update_xaxes(type='date')
             st.plotly_chart(fig, use_container_width=True)
 
-    # Pestaña del gráfico: mostrar el gráfico completo de Prophet centrado
+    # Gráfico completo de Prophet
     with tab_2:
         col_plot1, col_plot2, col_plot3 = st.columns([17, 60, 23])
         with col_plot2:
@@ -82,7 +82,7 @@ def prediccion_ganancias(df_limpio, parFrecuencia, parPeriodosFuturos, df_train,
             fig1.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x/1e6:.1f}M'))
             st.write(fig1)
 
-    # Pestaña de precisión: mostrar métricas de evaluación del modelo
+    # Métricas de evaluación del modelo
     with tab_3:
         # Verificar si las métricas de precisión están disponibles
         if mape is not None:
@@ -150,7 +150,7 @@ def prediccion_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, fr
             fig.update_xaxes(type='date')
             st.plotly_chart(fig, use_container_width=True)
 
-    # Pestaña del gráfico: mostrar el gráfico completo de Prophet centrado
+    # Gráfico completo de Prophet
     with tab_q2:
         col_qplot1, col_qplot2, col_qplot3 = st.columns([17, 60, 23])
         with col_qplot2:
@@ -164,7 +164,7 @@ def prediccion_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, fr
             fig1.gca().spines['right'].set_color('white')
             st.write(fig1)
 
-    # Pestaña de precisión: mostrar métricas de evaluación del modelo
+    # Métricas de evaluación del modelo
     with tab_q3:
         # Verificar si las métricas de precisión están disponibles
         if mape is not None:
@@ -190,10 +190,10 @@ def prediccion_ventas(df_limpio, parFrecuencia, parPeriodosFuturos, df_train, fr
             st.error("No se pudo calcular precisión (insuficientes datos o error).")
 
 #
-# Verificación y limpieza de los datos "ganancias"
+# Verificación y limpieza de los datos
 #
 if df_ganancias is not None and not df_ganancias.empty:
-    # Fase de limpieza de datos: eliminar filas con valores faltantes críticos
+    # Elimina filas con valores faltantes críticos
     df_ganancias = df_ganancias.dropna(subset=["fecha", "Ganancias"])
     if df_ganancias.empty:
         st.error("No quedan datos después de limpieza.")
@@ -297,6 +297,9 @@ with col_main3:
             btnEjecutarForecast = st.button("Ejecutar", type="primary", width="stretch")
 
 # Verificar si el usuario ha presionado el botón para ejecutar la predicción
+if not btnEjecutarForecast:
+    st.info("Configurá los parámetros de frecuencia y período, luego presiona 'Ejecutar' para ver las predicciones.")
+
 if btnEjecutarForecast:
     # Predicción de ganancias
     st.header("Predicción de Ganancias")
